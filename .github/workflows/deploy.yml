@@ -3,6 +3,7 @@ name: Live Server Auto-Update
 on:
   push:
     branches:
+      - main
       - taoban
 
 jobs:
@@ -12,22 +13,34 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Set Environment Variables
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "TARGET_HOST=${{ secrets.PRODUCTION_HOST }}" >> $GITHUB_ENV
+            echo "TARGET_KEY=${{ secrets.PRODUCTION_SSH_KEY }}" >> $GITHUB_ENV
+            echo "ENV_NAME=Production" >> $GITHUB_ENV
+          else
+            echo "TARGET_HOST=${{ secrets.STAGING_HOST }}" >> $GITHUB_ENV
+            echo "TARGET_KEY=${{ secrets.STAGING_SSH_KEY }}" >> $GITHUB_ENV
+            echo "ENV_NAME=Staging" >> $GITHUB_ENV
+          fi
+
       - name: Upload to Temporary Folder
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.STAGING_HOST }}
+          host: ${{ env.TARGET_HOST }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
+          key: ${{ env.TARGET_KEY }}
           source: "."
           target: "/home/ubuntu/stars-and-bloom-temp"
           rm: true
 
-      - name: Move Files to Web Root
+      - name: Move Files to Web Root (${{ env.ENV_NAME }})
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.STAGING_HOST }}
+          host: ${{ env.TARGET_HOST }}
           username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
+          key: ${{ env.TARGET_KEY }}
           script: |
             # Clean the web directory
             sudo rm -rf /var/www/html/*

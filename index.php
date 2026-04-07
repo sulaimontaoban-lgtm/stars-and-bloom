@@ -162,7 +162,7 @@ include("admin/connect.php");
                     <a class="logo" href="index.php">
                         <img src="image-path" alt="Your logo" title="Your logo" style="height:35px;" />
                     </a> -->
-              <h4>, Executed Strategically</h4>
+              <h4>Your Vision, Executed </h4>
               <p class="mt-3">
                 Discover tailored solutions and expert guidance for your
                 business challenges. We specialize in turning innovative ideas

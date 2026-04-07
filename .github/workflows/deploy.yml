@@ -1,21 +1,34 @@
-name: List Directories
+name: Live Server Auto-Update
 
 on:
   push:
     branches:
-      - main
+      - main  # This ensures it updates whenever you push changes
 
 jobs:
-  list-dirs:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: List all directories
-        run: |
-          find . -type d
-          ls -la
-          mkdir olum
-          ls -la
+      - name: Sync Files to Live Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.STAGING_HOST }} # Use your IP secret
+          username: ${{ secrets.SERVER_USER }} # 'ubuntu'
+          key: ${{ secrets.STAGING_SSH_KEY }} # Your .pem key secret
+          source: "." # Copy everything from the repo
+          target: "/var/www/html" # The web root on your AWS server
+          rm: true # This deletes the old files before putting the new ones in
+
+      - name: Final Apache Restart
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            sudo systemctl restart apache2
+            echo "Update Complete! The live server is now running the latest code."
